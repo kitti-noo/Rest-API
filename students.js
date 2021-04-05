@@ -2,8 +2,14 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const { resolveAny } = require('dns');
 const app = express();
+let cors = require('cors');
+app.use(cors());
 const router = express.Router();
 const PORT = 80;
+
+// all of our routes will be prefixed with /api
+app.use('/api', bodyParser.json(), router);   //[use json]
+app.use('/api', bodyParser.urlencoded({ extended: false }), router);
 
 let students = {
     list:
@@ -14,22 +20,20 @@ let students = {
         ]
 }
 
-// all of our routes will be prefixed with /api
-app.use('/api', bodyParser.json(), router);   //[use json]
-app.use('/api', bodyParser.urlencoded({ extended: false }), router);
 
 router.route('/students')
-    .get((req, res) => res.json(students.list))
+    .get((req, res) => res.json(students))
     .post((req, res) => {
+        console.log(req.body)
         //let id = (students.list.length)? students.list[students.list.length-1].id+1:1
-        let id = req.body.id
-        let name = req.body.name
-        let surname = req.body.surname
-        let major = req.body.major
-        let GPA = req.body.GPA
-
-        students = { list: [...students.list, { id, name, surname, major, GPA }] }
-        res.json(students.list)
+        let newStudent = {}
+        newStudent.id = (students.list.length) ? students.list[students.list.length-1].id+1 : 1
+        newStudent.name = req.body.name
+        newStudent.surname = req.body.surname
+        newStudent.major = req.body.major
+        newStudent.GPA  = req.body.GPA
+        students = { list: [...students.list, newStudent] }
+        res.json(students)
     })
 
 router.route('/students/:student_id') //params
@@ -55,7 +59,7 @@ router.route('/students/:student_id') //params
             students.list[id].surname = req.body.surname
             students.list[id].major = req.body.major
             students.list[id].GPA = req.body.GPA
-            res.json(students.list)
+            res.json(students)
         }
 
 
@@ -68,7 +72,7 @@ router.route('/students/:student_id') //params
         }
         else {
             students.list = students.list.filter((item) => +item.id !== +req.params.student_id)
-            res.json(students.list)
+            res.json(students)
         }
     })
 
